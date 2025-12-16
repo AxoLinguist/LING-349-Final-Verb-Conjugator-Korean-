@@ -710,7 +710,7 @@ frontend_compiler <- function(conjdata) {
 }
 #now for the input function
 yourverbssir <- function() {
-  verb <- readline(prompt = "Please enter a Korean predicate in the infinitive: ")
+  verb <- readline(prompt = "Please enter a Korean predicate (in Hangul) in the infinitive: ")
   if (length(verb) > 0) {
     real <- predchecker(verb)
     if (real == FALSE) {
@@ -723,4 +723,5 @@ yourverbssir <- function() {
       print("There you go, sir, your verbs")
     }
   }
+
 }
