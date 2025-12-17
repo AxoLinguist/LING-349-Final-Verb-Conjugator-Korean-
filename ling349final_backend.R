@@ -49,7 +49,11 @@ scrimcheck <- function(proppred) {
 #some verbs are immediately easy due to their verb ending. Let's check for them
 ## now
 easymodecheck <- function(discrim) {
-  check <- ifelse(discrim[1] == "하", TRUE, FALSE)
+  check <- if (discrim[1] == "하") {
+    TRUE
+    } else if (discrim[1] == '이' & length(discrim[2]) > 0) {
+      TRUE
+    }
   return(check)
 }
 #we made this as a function so that we can call it later
@@ -76,7 +80,39 @@ easyconj <- function(easyhaha) {
   return (conjdata)
 }
 #While that's the easy case, a lot of Korean verbs end in 하다 'to do'
-#let's deal with the other verbs that don't end with '하다'
+#However, copula verbs work differently than verbs ending with xㅣ다
+#unfortunately, this won't be able to handle copulas where the noun
+## ends with a vowel, since this will end up conjugating like a normal verb
+## and it will take a long time to enter every single noun that ends in 
+## a vowel for this conjugator to check
+# Maybe someday when I have more time, but for now...
+# This will just be an issue
+copconj <- function(rescop) {
+  #rescop stands for 'restricted copula,' since it won't conjugate
+  ## copula with vowel-final nouns
+  nounbase <- rescop$scrim[2]
+  iip <- paste(nounbase, '였어', sep = "")
+  #i decided to include assimilation since I find it occurs more in
+  ## casual speech than formal speech
+  ipp <- paste(nounbase, '이었어요', sep = "")
+  fpp <- paste(nounbase, '이었습니다', sep = "")
+  iipr <- paste(nounbase, '이야', sep = "")
+  ippr <- paste(nounbase, '이에요', sep = "")
+  fppr <- paste(nounbase, '입니다', sep = "")
+  futbase <- paste(nounbase, '이', sep = "")
+  iif <- paste(nounbase, '될', koiipred, sep = " ")
+  #the reason it's the noun base and not the future base is because
+  ## the particle can be omitted in casual speech
+  ipf1 <- paste(futbase, '될', koippred1, sep = " ")
+  ipf2 <- paste(futbase, '될', koippred2, sep = " ")
+  #While 이 following the noun can sometimes be omitted in polite speech,
+  ## I think it's more intuitive if it's there
+  fpf <- paste(futbase, '될', koifppred, sep = " ")
+  rescopconj <- list(iip, ipp, fpp, iipr, ippr, fppr, iif, ipf1, ipf2, fpf)
+  return(rescopconj)
+}
+#now we have a restricted copula conjugator. Let's deal with everything else
+#let's deal with the other verbs that don't end with '하다' or are copula
 jamobreak <- function(scrim) {
   jamo <- as.character(scrim[1])
   dcoded <- utf8ToInt(jamo)
@@ -649,12 +685,17 @@ euconj <- function(euireg) {
 #now we'll build a function to rationalize how to conjugate the data.
 solver <- function(input) {
   data <- conjreadybuild(input)
-  if (data$easy == TRUE & data$irreg == "ntype") {
+  if (data$easy == TRUE & data$irreg == "ntype" & data$scrim[1] == "하") {
     trivial <- easyconj(data)
     trivialcase <- frontend_compiler(trivial)
     return(trivialcase)
     #deals with the hada verbs
-  } else if (data$breakdown[8] == FALSE & data$irreg == "ntype" & data$breakdown[7] == FALSE) {
+  } else if (data$easy == TRUE & data$scrim[1] == '이') {
+    coco <- copconj(data)
+    cocoreturn <- frontend_compiler(coco)
+    return(cocoreturn) 
+    } else if (data$breakdown[8] == FALSE & data$irreg == "ntype" & data$breakdown[7] == FALSE & data$easy == FALSE) {
+    #had to add the easy check since restricted copula could get past without it
     basic <- basic_conjugator(data)
     basicresults <- frontend_compiler(basic)
     return(basicresults)
@@ -723,5 +764,4 @@ yourverbssir <- function() {
       print("There you go, sir, your verbs")
     }
   }
-
 }
