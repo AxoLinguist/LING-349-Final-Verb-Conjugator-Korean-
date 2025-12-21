@@ -53,6 +53,8 @@ easymodecheck <- function(discrim) {
     TRUE
     } else if (discrim[1] == '이' & length(discrim[2]) > 0) {
       TRUE
+    } else {
+      FALSE
     }
   return(check)
 }
@@ -556,8 +558,9 @@ euconj <- function(euireg) {
   #this function conjugates the ㅡ irregulars, with an extra bit for 르
   ## irregulars
   diffdata <- euireg
+  diffdata <- filter(diffdata)
   #stands for difficult data
-  singcheck <- ifelse(length(diffdata$scrim[2]) > 0, FALSE, TRUE)
+  singcheck <- ifelse(length(diffdata$scrim[3]) > 1, FALSE, TRUE)
   if (singcheck == FALSE) {
     nsccheck <- paste(diffdata$scrim[1], "다", sep = "")
     #newscrimcheck
@@ -631,7 +634,7 @@ euconj <- function(euireg) {
     longbase <- list(iip, ipp, fpp, iipr, ippr, fppr, iif, ipf1, ipf2, fpf)
     return(longbase)
     #guess who remembered this time
-  } else if (singcheck == TRUE) {
+  } else if (singcheck == TRUE & diffdata$filter == FALSE) {
     #handles the single syllable ㅡ irregulars
     nbint <- ((5-1)*28) + ((ncho-1)*588) + 44032
     pstbase1 <- nbint + 20
@@ -744,7 +747,7 @@ frontend_compiler <- function(conjdata) {
   iif <- paste("Informal Impolite Future", conjdata[7], sep = " ")
   ipf1 <- paste("Informal Polite Future Type 1:", conjdata[8], sep = " ")
   ipf2 <- paste("Informal Polite Future Type 2:", conjdata[9], sep = " ")
-  fpf <- paste("Formal Polite Present:", conjdata[10], sep = " ")
+  fpf <- paste("Formal Polite Future:", conjdata[10], sep = " ")
   #that's why all of the functions conjugated in the same order
   results <- list(iip, ipp, fpp, iipr, ippr, fppr, iif, ipf1, ipf2, fpf)
   return(results)
